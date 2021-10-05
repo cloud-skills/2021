@@ -1,0 +1,129 @@
+# 1-1
+aws ec2 describe-vpcs --filter Name=tag:Name,Values=wsi-vpc --query "Vpcs[].CidrBlock"
+---
+
+# 1-2
+aws ec2 describe-subnets —filter Name=tag:Name,Values=wsi-public-a --query "Subnets[].CidrBlock"
+
+aws ec2 describe-subnets --filter Name=tag:Name,Values=wsi-private-a --query "Subnets[].CidrBlock"
+---
+
+# 1-3
+aws ec2 describe-subnets --filter Name=tag:Name,Values=wsi-public-a --query "Subnets[].AvailabilityZone"
+
+aws ec2 describe-subnets --filter Name=tag:Name,Values=wsi-private-b --query "Subnets[].AvailabilityZone"
+---
+
+# 1-4
+aws ec2 describe-route-tables --filter Name=tag:Name,Values=wsi-private-a-rt --query "RouteTables[].Routes[].NatGatewayId"
+
+aws ec2 describe-route-tables --filter Name=tag:Name,Values=wsi-private-b-rt --query "RouteTables[].Routes[].NatGatewayId"
+
+aws ec2 describe-route-tables --filter Name=tag:Name,Values=wsi-public-rt --query "RouteTables[].Routes[].GatewayId"
+---
+
+# 2-1
+!!! 꺽쇠 부분 변경 해야 합니다.
+aws s3 ls s3://wsi-<비번호>-<4자리 영문>-web-static
+---
+
+# 2-2
+!!! 꺽쇠 부분 변경 해야 합니다.
+aws s3 ls s3://wsi-<비번호>-<4자리 임의값>-artifactory 
+---
+
+# 2-3
+!!! 꺽쇠 부분 변경 해야 합니다.
+aws ec2 describe-instances —filter Name=tag:Name,Values=wsi-web-api-asg --query "Reservations[].Instances[].PrivateIpAddress" 
+
+ssh ec2-user@<IP>
+
+mkdir /opt/tmp/
+
+aws s3 cp s3://wsi-<비번호>-<4자리 임의값>-artifactory/app.py /opt/tmp/app-zxzc39 
+
+ls /opt/tmp/app-zxzc39
+
+echo "hellow cloud" > /opt/app-yzkz-39.txt
+
+aws s3 cp /opt/app-yzkz-39.txt s3://wsi-<비번호>-<4자리 임의값>-artifactory/ 
+---
+
+
+
+# 3-1 
+aws ec2 describe-instances --filter Name=tag:Name,Values=wsi-bastion-ec2 --query "Reservations[].Instances[].InstanceId" --region ap-northeast-2
+---
+
+# 3-2 
+aws ec2 describe-instances --filter Name=tag:Name,Values=wsi-bastion-ec2 --query "Reservations[].Instances[].PublicIpAddress" --region ap-northeast-2
+aws ec2 describe-addresses --query "Addresses[].PublicIp" --region ap-northeast-2 
+---
+
+# 4-1
+aws cloudfront list-distributions --query "DistributionList.Items[].Id" --region ap-northeast-2
+---
+
+# 4-2 
+aws cloudfront list-distributions --query "DistributionList.Items[].Origins.Items[]" | jq ".[].DomainName" | grep s3
+---
+
+#4-3 
+aws cloudfront list-distributions --query "DistributionList.Items[].Origins.Items[]" | jq ".[].DomainName" | grep elb
+---
+
+#4-4 
+aws cloudfront list-distributions --query "DistributionList.Items[].Id"
+aws cloudfront get-distribution-config --id <id 나온거> --query "DistributionConfig.PriceClass"
+---
+
+# 5-1  
+aws cloudfront list-distributions --query "DistributionList.Items[].DomainName"
+---
+
+#6-1 
+aws elbv2 describe-load-balancers --name "wsi-web-api-alb" --query "LoadBalancers[].Scheme" --region ap-northeast-2
+aws elbv2 describe-load-balancers --name "wsi-web-api-alb" --query "LoadBalancers[].Type" --region ap-northeast-2
+---
+
+#6-2 
+aws elbv2 describe-load-balancers --names "wsi-web-api-alb" --query "LoadBalancers[].DNSName" --region ap-northeast-2
+---
+
+#6-3 
+aws ec2 describe-instances --filter Name=tag:Name,Values=wsi-web-api-asg --query "Reservations[].Instances[].PrivateIpAddress" --region ap-northeast-2
+---
+
+7-1 aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names wsi-web-api-asg --query "AutoScalingGroups[].Instances[].HealthStatus" --region ap-northeast-2
+---
+
+7-2 aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names wsi-web-api-asg --query "AutoScalingGroups[].AvailabilityZones" --region ap-northeast-2
+aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names wsi-web-api-asg --query "AutoScalingGroups[].MinSize" --region ap-northeast-2
+---
+
+7-3 aws autoscaling describe-policies --auto-scaling-group-name wsi-web-api-asg --query "ScalingPolicies[].AutoScalingGroupName" --region ap-northeast-2
+---
+#7-5
+7-4-2 aws autoscaling update-auto-scaling-group --auto-scaling-group-name wsi-web-api-asg --min-size 2 --max-size 5 --desired-capacity 2 --region ap-northeast-2
+7-4-3 aws ec2 describe-instances --filter Name=tag:Name,Values=wsi-web-api-asg --query "Reservations[].Instances[].PrivateIpAddress"
+7-4-5 sudo amazon-linux-extras install -y epel; sudo yum install -y stress
+7-4-8 aws autoscaling describe-auto-scaling-groups --auto-scaling-group-names wsi-web-api-asg --query "AutoScalingGroups[].DesiredCapacity" --region ap-northeast-2
+---
+# 7-5
+7-5-2 aws autoscaling update-auto-scaling-group --auto-scaling-group-name wsi-web-api-asg --min-size 0 --max-size 0 --desired-capacity 0 --region ap-northeast-2
+7-5-3 aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name wsi-web-api-asg --query "AutoScalingGroups[].Instances[].InstanceId" --region ap-northeast-2
+7-5-4 aws autoscaling update-auto-scaling-group --auto-scaling-group-name wsi-web-api-asg --min-size 1 --max-size 1 --desired-capacity 1 --region ap-northeast-2
+7-5-5 aws elbv2 describe-load-balancers --names "wsi-web-api-alb" --query "LoadBalancers[].DNSName" --region ap-northeast-2
+---
+
+8-1 aws logs describe-log-groups --log-group-name-prefix /aws/ec2/wsi --query "logGroups[].storedBytes" --region ap-northeast-2
+---
+
+8-2 aws elbv2 describe-load-balancers --name "wsi-web-api-alb" --query "LoadBalancers[].DNSName" --region ap-northeast-2
+---
+
+8-2-4 aws logs tail '/aws/ec2/wsi' --since 5m | grep 999wsi2021abcd
+
+
+
+
